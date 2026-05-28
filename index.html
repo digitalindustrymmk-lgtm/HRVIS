@@ -18,7 +18,12 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@300;400;700;900&display=swap');
     
-    body {
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh; /* Fallback */
+      height: 100dvh; /* Dynamic viewport height for mobile browsers */
+      overflow: hidden; /* Prevent body scroll, let app container handle it */
       font-family: 'Battambang', sans-serif;
       background-color: #f8fafc; 
       color: #334155;
@@ -39,6 +44,7 @@
       animation: float-gentle 4s infinite ease-in-out;
     }
 
+    /* Hide scrollbar completely */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
@@ -233,11 +239,12 @@
       };
 
       return (
-        <div className="min-h-screen flex justify-center text-slate-800 font-sans bg-gray-200">
-          <div className="w-full max-w-md bg-slate-50 min-h-screen shadow-2xl relative overflow-hidden flex flex-col border-x border-slate-300">
+        /* The container takes strictly 100% of the screen height, meaning no full-page scrolling */
+        <div className="h-full w-full flex justify-center text-slate-800 font-sans bg-gray-200">
+          <div className="w-full max-w-md bg-slate-50 h-full shadow-2xl relative flex flex-col border-x border-slate-300">
             
-            {/* Main Scrollable Content */}
-            <div className="flex-1 overflow-y-auto no-scrollbar pb-24">
+            {/* Main Scrollable Content area inside the restricted container */}
+            <div className="flex-1 overflow-y-auto no-scrollbar pb-24 relative">
               
               {/* Header Section */}
               <div className="bg-white rounded-b-[2.5rem] shadow-[0_10px_40px_rgba(0,0,0,0.04)] p-6 relative">
