@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ដំណើរត្រលប់ទៅផ្ទះ</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM (UMD) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel for in-browser JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@300;400;700;900&display=swap');
+    
+    body {
+      font-family: 'Battambang', sans-serif;
+      background-color: #f8fafc; 
+      color: #334155;
+      -webkit-tap-highlight-color: transparent;
+      line-height: 1.6;
+    }
+
+    h1, h2, h3, h4, h5, h6, .font-bold {
+      font-family: 'Battambang', sans-serif;
+      font-weight: 700;
+    }
+
+    @keyframes float-gentle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
+    }
+    .animate-float {
+      animation: float-gentle 4s infinite ease-in-out;
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // --- Inline Icon Components (Replacing Lucide Imports for Single HTML File) ---
+    const IconCalendarDays = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>);
+    const IconClock = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
+    const IconPackage = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="16.5" x2="7.5" y1="9.4" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></svg>);
+    const IconLaptop = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></svg>);
+    const IconLandmark = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>);
+    const IconCarFront = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.64 5H8.4a2 2 0 0 0-1.9 1.3L5 10 3 8"/><path d="M3 12a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5a1.5 1.5 0 0 0 3 0h11a1.5 1.5 0 0 0 3 0h.5a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1Z"/><circle cx="6.5" cy="16.5" r="1.5"/><circle cx="17.5" cy="16.5" r="1.5"/></svg>);
+    const IconCoffee = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>);
+    const IconUtensils = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>);
+    const IconHome = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>);
+    const IconCheckCircle2 = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>);
+    const IconSparkles = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>);
+    const IconAlertCircle = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>);
+    const IconCheck = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"/></svg>);
+    const IconCalendar = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>);
+    const IconTimer = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg>);
+    const IconActivity = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>);
+    const IconList = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>);
+    const IconMapPin = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>);
+
+    const TargetDate = new Date('2026-06-30T00:00:00');
+
+    function App() {
+      const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, type: 'countdown' });
+      const [today, setToday] = useState(new Date());
+      const [activeTab, setActiveTab] = useState('live'); 
+      const [completedTasks, setCompletedTasks] = useState({});
+
+      useEffect(() => {
+        const timer = setInterval(() => {
+          const now = new Date();
+          setToday(now);
+          
+          const difference = TargetDate.getTime() - now.getTime();
+          if (difference > 0) {
+            setTimeLeft({
+              days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+              hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+              minutes: Math.floor((difference / 1000 / 60) % 60),
+              seconds: Math.floor((difference / 1000) % 60),
+              type: 'countdown'
+            });
+          } else {
+            const pastDiff = now.getTime() - TargetDate.getTime();
+            setTimeLeft({
+              days: Math.floor(pastDiff / (1000 * 60 * 60 * 24)),
+              hours: Math.floor((pastDiff / (1000 * 60 * 60)) % 24),
+              minutes: Math.floor((pastDiff / 1000 / 60) % 60),
+              seconds: Math.floor((pastDiff / 1000) % 60),
+              type: 'countup'
+            });
+          }
+        }, 1000);
+
+        return () => clearInterval(timer);
+      }, []);
+
+      // --- CORE LOGIC GENERATOR (Ensuring Skip alternating) ---
+      const fullSchedule = useMemo(() => {
+        let schedule = [];
+        let current = new Date(2026, 4, 28); // ចាប់ផ្តើមពីថ្ងៃ 28 ឧសភា
+        const endDate = new Date(2026, 5, 30); 
+
+        const foodQueue = [
+          { title: 'ព្រឹកទៅក្រៅញ៉ាំបាយ', desc: 'ញ៉ាំបាយបង្កើនថាមពល', iconName: 'rice', color: 'bg-blue-100 text-blue-600', reason: 'វេនញ៉ាំបាយ (១)' },
+          { title: 'ព្រឹកទៅក្រៅញ៉ាំបាយ', desc: 'ញ៉ាំបាយបង្កើនថាមពល', iconName: 'rice', color: 'bg-blue-100 text-blue-600', reason: 'វេនញ៉ាំបាយ (២)' },
+          { title: 'ព្រឹកទៅក្រៅញ៉ាំនំបញ្ចុក', desc: 'ញ៉ាំនំបញ្ចុកសម្លខ្មែរឆ្ងាញ់', iconName: 'nombanhchok', color: 'bg-emerald-100 text-emerald-600', reason: 'វេនញ៉ាំនំបញ្ចុក' }
+        ];
+
+        let lastGoOut = true; // សន្មត់ថាមុនថ្ងៃទី ២៨ បានចេញក្រៅ
+        let foodQueueIndex = 0;
+
+        while (current <= endDate) {
+          let isWed = current.getDay() === 3;
+          let dayData = { date: new Date(current), meal: null };
+
+          if (isWed) {
+            dayData.meal = {
+              title: 'ព្រឹកទៅក្រៅញ៉ាំគុយទាវ',
+              desc: 'ថ្ងៃពុធ: កំណត់ជាថ្ងៃត្រូវទៅញ៉ាំគុយទាវ',
+              iconName: 'kuyteav',
+              color: 'bg-orange-100 text-orange-600',
+              reason: 'ថ្ងៃពុធ (គុយទាវ)',
+              isGoOut: true
+            };
+            lastGoOut = true; 
+          } else {
+            if (lastGoOut) {
+              dayData.meal = {
+                title: 'សម្រាកញ៉ាំនៅផ្ទះ',
+                desc: 'រំលងមួយថ្ងៃ (Skip) មិនចេញទៅក្រៅ',
+                iconName: 'home',
+                color: 'bg-slate-100 text-slate-400',
+                reason: 'ថ្ងៃរំលង (Skip)',
+                isGoOut: false
+              };
+              lastGoOut = false; 
+            } else {
+              let activeFood = foodQueue[foodQueueIndex % 3];
+              dayData.meal = { ...activeFood, isGoOut: true };
+              foodQueueIndex++;
+              lastGoOut = true; 
+            }
+          }
+          
+          schedule.push(dayData);
+          current.setDate(current.getDate() + 1);
+        }
+
+        return schedule;
+      }, []);
+
+      const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const upcomingMeals = fullSchedule.filter(d => d.date >= todayZero);
+
+      const todayData = upcomingMeals[0] || { meal: {} };
+      const tomorrowData = upcomingMeals[1] || { meal: {} };
+      const todayFood = todayData.meal;
+      const nextFood = tomorrowData.meal;
+
+      const currentInMinutes = today.getHours() * 60 + today.getMinutes();
+      const startInMinutes = 6 * 60 + 30; // 6:30 AM
+      const endInMinutes = 8 * 60 + 30;   // 8:30 AM
+      
+      let mealStatus = 'waiting';
+      if (currentInMinutes >= startInMinutes && currentInMinutes <= endInMinutes) {
+        mealStatus = 'active';
+      } else if (currentInMinutes > endInMinutes) {
+        mealStatus = 'passed';
+      }
+
+      let nextMealDate = new Date(today);
+      nextMealDate.setDate(nextMealDate.getDate() + 1);
+      nextMealDate.setHours(6, 30, 0, 0);
+      
+      const diffToNextMeal = nextMealDate.getTime() - today.getTime();
+      const nextHours = Math.floor((diffToNextMeal / (1000 * 60 * 60)) % 24);
+      const nextMinutes = Math.floor((diffToNextMeal / 1000 / 60) % 60);
+      const nextSeconds = Math.floor((diffToNextMeal / 1000) % 60);
+
+      const getSpecialEvents = (date) => {
+        const y = date.getFullYear();
+        const m = date.getMonth(); 
+        const d = date.getDate();
+        let events = [];
+
+        if (y === 2026 && m === 5 && d === 29) { 
+          events.push({ id: 'pack_bag', time: 'ពេញមួយថ្ងៃ', title: 'រៀបចំអីវ៉ាន់ត្រៀមទៅផ្ទះ', icon: <IconPackage className="w-5 h-5 text-indigo-500" /> });
+        }
+        else if (y === 2026 && m === 5 && d === 30) { 
+          events.push({ id: 'return_laptop', time: 'ពេលព្រឹក', title: 'រៀបចំ laptop ឱ្យមេវិញ', icon: <IconLaptop className="w-5 h-5 text-slate-600" /> });
+          events.push({ id: 'acleda_bank', time: '០៩:៣០ ព្រឹក', title: 'ទៅធនាគារ ACLEDA Update ឯកសារ', icon: <IconLandmark className="w-5 h-5 text-sky-500" /> });
+          events.push({ id: 'gas_moto', time: 'ល្ងាច / មុនទៅ', title: 'ចាក់សាំងម៉ូតូឱ្យពេញ', icon: <IconCarFront className="w-5 h-5 text-rose-500" /> });
+        }
+        return events;
+      };
+
+      const toggleTask = (id) => {
+        setCompletedTasks(prev => ({ ...prev, [id]: !prev[id] }));
+      };
+
+      const todaySpecialEvents = getSpecialEvents(today);
+
+      const formatDate = (date) => {
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        return date.toLocaleDateString('km-KH', options);
+      };
+
+      const formatDateShort = (date) => {
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString('km-KH', options);
+      };
+
+      const renderIcon = (iconName, className) => {
+        switch (iconName) {
+          case 'kuyteav': return <IconCoffee className={className} />;
+          case 'rice': return <IconUtensils className={className} />;
+          case 'nombanhchok': return <IconUtensils className={className} />;
+          case 'home': return <IconHome className={className} />;
+          default: return <IconUtensils className={className} />;
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex justify-center text-slate-800 font-sans bg-gray-200">
+          <div className="w-full max-w-md bg-slate-50 min-h-screen shadow-2xl relative overflow-hidden flex flex-col border-x border-slate-300">
+            
+            {/* Main Scrollable Content */}
+            <div className="flex-1 overflow-y-auto no-scrollbar pb-24">
+              
+              {/* Header Section */}
+              <div className="bg-white rounded-b-[2.5rem] shadow-[0_10px_40px_rgba(0,0,0,0.04)] p-6 relative">
+                <div className="flex justify-between items-center relative z-10">
+                  <div>
+                    <h1 className="text-[22px] font-bold text-slate-800 tracking-wide">ដំណើរត្រលប់ទៅផ្ទះ 🏡</h1>
+                    <p className="text-slate-500 text-[13px] mt-1.5 flex items-center gap-1.5 font-bold">
+                      <IconMapPin className="w-4 h-4 text-blue-500" /> គោលដៅ៖ ៣០ មិថុនា ២០២៦
+                    </p>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-2xl shadow-sm text-blue-600">
+                    <IconHome className="w-6 h-6" />
+                  </div>
+                </div>
+
+                {/* Timer Card */}
+                <div className="mt-5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[1.5rem] p-5 shadow-lg shadow-blue-500/20 text-white animate-float relative overflow-hidden">
+                  <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+                  <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+
+                  <div className="flex justify-between items-center mb-3 relative z-10">
+                    <span className="text-xs text-blue-100 font-bold tracking-wider flex items-center gap-1.5">
+                      <IconClock className="w-4 h-4" />
+                      {timeLeft.type === 'countdown' ? 'ពេលវេលារង់ចាំសរុប' : 'ពេលវេលាបានកន្លងផុត'}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-4 gap-3 text-center relative z-10">
+                    <div>
+                      <span className="block text-3xl font-extrabold">{timeLeft.days}</span>
+                      <span className="text-[11px] text-blue-100 font-bold">ថ្ងៃ</span>
+                    </div>
+                    <div>
+                      <span className="block text-3xl font-extrabold">{timeLeft.hours}</span>
+                      <span className="text-[11px] text-blue-100 font-bold">ម៉ោង</span>
+                    </div>
+                    <div>
+                      <span className="block text-3xl font-extrabold">{timeLeft.minutes}</span>
+                      <span className="text-[11px] text-blue-100 font-bold">នាទី</span>
+                    </div>
+                    <div>
+                      <span className="block text-3xl font-extrabold text-cyan-200">{timeLeft.seconds}</span>
+                      <span className="text-[11px] text-blue-100 font-bold">វិនាទី</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6">
+                
+                {/* ================= LIVE TAB ================= */}
+                {activeTab === 'live' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-sm font-bold text-slate-500 mb-1 flex items-center gap-1.5">
+                        <IconActivity className="w-4 h-4 text-rose-500" /> Live ថ្ងៃនេះ
+                      </h2>
+                      <p className="text-lg font-bold text-slate-800">{formatDate(today)}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* TODAY'S MEAL CARD */}
+                      <div className={`bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative transition-all duration-500 ${mealStatus === 'passed' ? 'opacity-60 blur-[1px] grayscale' : ''}`}>
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-600">
+                            កាលវិភាគព្រឹកនេះ (ថ្ងៃទី {today.getDate()})
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md flex items-center gap-1">
+                            <IconClock className="w-3 h-3"/> ៦:៣០ - ៨:៣០ ព្រឹក
+                          </span>
+                        </div>
+
+                        {todayFood.isGoOut ? (
+                          <React.Fragment>
+                            {mealStatus === 'active' && (
+                              <div className="bg-emerald-50 text-emerald-600 text-[11.5px] p-2.5 rounded-xl mb-4 font-bold flex items-center gap-2 border border-emerald-100">
+                                <span className="relative flex h-2.5 w-2.5">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                </span>
+                                កំពុងស្ថិតក្នុងម៉ោងញ៉ាំអាហារ!
+                              </div>
+                            )}
+                            {mealStatus === 'passed' && (
+                              <div className="bg-rose-50 text-rose-600 text-[11.5px] p-2.5 rounded-xl mb-4 font-bold flex items-center gap-2 border border-rose-100">
+                                <IconAlertCircle className="w-4 h-4" />
+                                បានហួសម៉ោងញ៉ាំអាហារព្រឹកនេះហើយ
+                              </div>
+                            )}
+                            {mealStatus === 'waiting' && (
+                              <div className="bg-amber-50 text-amber-600 text-[11.5px] p-2.5 rounded-xl mb-4 font-bold flex items-center gap-2 border border-amber-100">
+                                <IconTimer className="w-4 h-4" />
+                                រង់ចាំដល់ម៉ោង ៦:៣០ ព្រឹក
+                              </div>
+                            )}
+                          </React.Fragment>
+                        ) : (
+                           <div className="bg-slate-50 text-slate-500 text-[11.5px] p-2.5 rounded-xl mb-4 font-bold flex items-center gap-2 border border-slate-200">
+                              <IconHome className="w-4 h-4" />
+                              ថ្ងៃនេះជាថ្ងៃរំលង (សម្រាកញ៉ាំនៅផ្ទះ)
+                           </div>
+                        )}
+
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className={`p-3.5 rounded-2xl ${todayFood.color}`}>
+                            {renderIcon(todayFood.iconName, 'w-7 h-7')}
+                          </div>
+                          <div>
+                            <h3 className="text-[16px] font-bold text-slate-800 flex items-center gap-1.5">
+                               {todayFood.title}
+                               {todayFood.iconName === 'nombanhchok' && <IconSparkles className="w-3.5 h-3.5 text-emerald-400" />}
+                            </h3>
+                            <p className="text-[13px] text-slate-500 mt-1">{todayFood.desc}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* NEXT MEAL WIDGET */}
+                      {mealStatus === 'passed' && (
+                        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-indigo-100/50">
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-[13px] font-bold text-indigo-600 flex items-center gap-1.5">
+                              <IconTimer className="w-4 h-4" /> រង់ចាំវេនអាហារបន្ទាប់
+                            </span>
+                            <span className="text-[11px] text-indigo-500 font-bold uppercase bg-white px-2.5 py-1 rounded-md shadow-sm">
+                              ថ្ងៃស្អែក ទី {nextMealDate.getDate()}
+                            </span>
+                          </div>
+                          
+                          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-4 flex justify-between items-center border border-white">
+                             <div className="flex items-center gap-3 flex-1">
+                                <div className={`p-2.5 rounded-xl ${nextFood.color} shadow-sm scale-90`}>
+                                  {renderIcon(nextFood.iconName, 'w-6 h-6')}
+                                </div>
+                                <div>
+                                  <p className="text-[11px] text-slate-500 font-bold mb-0.5">({nextFood.reason})</p>
+                                  <p className="text-[14px] font-bold text-slate-800">{nextFood.title}</p>
+                                </div>
+                             </div>
+                             
+                             <div className="text-right border-l border-indigo-100 pl-4 ml-2">
+                               <div className="text-[19px] font-extrabold text-indigo-600 tracking-wider">
+                                 {String(nextHours).padStart(2, '0')}:{String(nextMinutes).padStart(2, '0')}:{String(nextSeconds).padStart(2, '0')}
+                               </div>
+                               <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5">ម៉ោងទៀត</p>
+                             </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Today's Special Tasks */}
+                    <div className="mt-8">
+                      <h3 className="text-[13px] font-bold text-slate-400 tracking-wide mb-3 px-1 flex items-center gap-1.5">
+                         <IconList className="w-4 h-4" /> កិច្ចការពិសេសថ្ងៃនេះ
+                      </h3>
+                      
+                      {todaySpecialEvents.length > 0 ? (
+                        <div className="space-y-3">
+                          {todaySpecialEvents.map((event) => (
+                            <div 
+                              key={event.id}
+                              onClick={() => toggleTask(event.id)}
+                              className={`p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between cursor-pointer shadow-sm ${completedTasks[event.id] ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-white border-slate-100 hover:border-blue-200'}`}
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className={`p-2.5 rounded-xl ${completedTasks[event.id] ? 'bg-slate-100' : 'bg-slate-50'}`}>
+                                  {event.icon}
+                                </div>
+                                <div>
+                                  <p className={`text-[15px] font-bold ${completedTasks[event.id] ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                    {event.title}
+                                  </p>
+                                  <span className="text-[12px] text-slate-500 font-bold flex items-center gap-1 mt-0.5">
+                                     <IconClock className="w-3 h-3" /> {event.time}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${completedTasks[event.id] ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200'}`}>
+                                {completedTasks[event.id] && <IconCheck className="w-3.5 h-3.5 stroke-[3]" />}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm text-center">
+                          <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <IconCheckCircle2 className="w-6 h-6 text-slate-400" />
+                          </div>
+                          <p className="text-[14px] font-bold text-slate-500">មិនមានភារកិច្ចពិសេសសម្រាប់ថ្ងៃនេះទេ</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ================= ALL TAB ================= */}
+                {activeTab === 'all' && (
+                  <div className="space-y-8 animate-fade-in">
+                    
+                    {/* Full Schedule List */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <IconList className="w-5 h-5 text-blue-500" />
+                        <h2 className="text-[15px] font-bold text-slate-800">កាលវិភាគអាហាររហូតដល់ថ្ងៃទី ៣០ មិថុនា</h2>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {upcomingMeals.map((item, index) => (
+                          <div key={index} className={`bg-white p-3.5 rounded-2xl border ${index === 0 ? 'border-blue-300 shadow-md ring-2 ring-blue-50' : 'border-slate-200 shadow-sm'} flex items-center justify-between transition-all hover:border-blue-200 ${!item.meal.isGoOut ? 'opacity-70 bg-slate-50' : ''}`}>
+                            <div className="flex items-center gap-3.5">
+                              <div className={`p-2.5 rounded-xl ${item.meal.color}`}>
+                                {renderIcon(item.meal.iconName, 'w-5 h-5')}
+                              </div>
+                              <div>
+                                <p className="text-[14px] font-bold text-slate-800 flex items-center gap-1.5">
+                                  {item.meal.title}
+                                  {item.meal.iconName === 'nombanhchok' && <IconSparkles className="w-3.5 h-3.5 text-emerald-400" />}
+                                  {index === 0 && <span className="ml-1 text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full relative -top-0.5">ថ្ងៃនេះ</span>}
+                                </p>
+                                <p className="text-[12px] text-slate-500 font-bold mt-0.5 flex items-center gap-1">
+                                  <IconCalendar className="w-3 h-3" /> {formatDateShort(item.date)}
+                                </p>
+                              </div>
+                            </div>
+                            <span className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap ${item.meal.isGoOut ? 'bg-slate-100 text-slate-600' : 'bg-transparent text-slate-400 border border-slate-200'}`}>
+                              {item.meal.reason}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Milestones Vertical Timeline */}
+                    <div className="pt-4 border-t border-slate-200">
+                      <div className="flex items-center gap-2 mb-6">
+                        <IconCalendarDays className="w-5 h-5 text-indigo-500" />
+                        <h2 className="text-[15px] font-bold text-slate-800">ព្រឹត្តិការណ៍ត្រៀមខ្លួនទៅផ្ទះ</h2>
+                      </div>
+
+                      <div className="relative border-l-[3px] border-slate-200 ml-3 pl-6 space-y-8 py-2">
+                        {/* June 29 */}
+                        <div className="relative">
+                          <div className="absolute -left-[32px] top-1.5 bg-white border-4 border-indigo-500 rounded-full w-5 h-5 shadow-sm"></div>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-[15px] font-bold text-indigo-600">២៩ មិថុនា ២០២៦</h3>
+                          </div>
+                          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                            <div className="flex items-start gap-4">
+                              <div className="bg-indigo-50 p-3 rounded-xl shrink-0">
+                                <IconPackage className="w-5 h-5 text-indigo-500" />
+                              </div>
+                              <div>
+                                <p className="text-[15px] font-bold text-slate-800">រៀបចំអីវ៉ាន់ត្រៀមទៅផ្ទះ</p>
+                                <span className="inline-flex items-center gap-1 mt-2.5 text-[11px] bg-slate-100 text-slate-600 py-1.5 px-3 rounded-lg font-bold">
+                                   <IconClock className="w-3 h-3" /> ពេញមួយថ្ងៃ
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* June 30 */}
+                        <div className="relative">
+                          <div className="absolute -left-[32px] top-1.5 bg-white border-4 border-blue-500 rounded-full w-5 h-5 shadow-sm"></div>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-[15px] font-bold text-blue-600">៣០ មិថុនា ២០២៦</h3>
+                            <span className="text-[11px] bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md font-bold shadow-sm">ថ្ងៃចេញដំណើរ!</span>
+                          </div>
+                          <div className="space-y-3">
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-start gap-4">
+                              <div className="bg-slate-100 p-3 rounded-xl shrink-0">
+                                <IconLaptop className="w-5 h-5 text-slate-600" />
+                              </div>
+                              <div>
+                                <p className="text-[15px] font-bold text-slate-800">ប្រគល់ Laptop ឱ្យក្រុមហ៊ុន</p>
+                                <span className="inline-flex items-center gap-1 mt-2 text-[11px] bg-slate-100 text-slate-600 py-1.5 px-3 rounded-lg font-bold">
+                                  <IconClock className="w-3 h-3" /> ពេលព្រឹក
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-start gap-4">
+                              <div className="bg-sky-50 p-3 rounded-xl shrink-0">
+                                <IconLandmark className="w-5 h-5 text-sky-500" />
+                              </div>
+                              <div>
+                                <p className="text-[15px] font-bold text-slate-800">ទៅធនាគារ ACLEDA</p>
+                                <span className="inline-flex items-center gap-1 mt-2 text-[11px] bg-sky-100 text-sky-700 py-1.5 px-3 rounded-lg font-bold">
+                                  <IconClock className="w-3 h-3" /> ម៉ោង ០៩:៣០ ព្រឹក
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-start gap-4">
+                              <div className="bg-rose-50 p-3 rounded-xl shrink-0">
+                                <IconCarFront className="w-5 h-5 text-rose-500" />
+                              </div>
+                              <div>
+                                <p className="text-[15px] font-bold text-slate-800">ចាក់សាំងម៉ូតូឱ្យពេញ</p>
+                                <span className="inline-flex items-center gap-1 mt-2 text-[11px] bg-rose-100 text-rose-700 py-1.5 px-3 rounded-lg font-bold">
+                                  <IconClock className="w-3 h-3" /> មុនចេញដំណើរ
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ================= STYLISH FLOATING FOOTER NAVIGATION (ICONS ONLY) ================= */}
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-44 bg-white/90 backdrop-blur-xl border border-slate-200/60 shadow-[0_15px_40px_rgba(0,0,0,0.1)] z-50 rounded-full flex items-center justify-between p-1.5">
+              <button 
+                onClick={() => setActiveTab('live')}
+                className={`flex-1 flex items-center justify-center py-2.5 rounded-full transition-all duration-300 ${activeTab === 'live' ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 scale-105' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-50'}`}
+              >
+                <div className="relative">
+                  <IconActivity className="w-[22px] h-[22px]" />
+                  {activeTab === 'live' && (
+                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-400 rounded-full border-2 border-blue-500 animate-pulse"></span>
+                  )}
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('all')}
+                className={`flex-1 flex items-center justify-center py-2.5 rounded-full transition-all duration-300 ${activeTab === 'all' ? 'bg-blue-500 text-white shadow-md shadow-blue-500/30 scale-105' : 'text-slate-400 hover:text-blue-500 hover:bg-slate-50'}`}
+              >
+                <IconList className="w-[22px] h-[22px]" />
+              </button>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
